@@ -1,31 +1,50 @@
-data = readmatrix('data_20txt.txt');
-time_file = data(:,1) - time_file(1); % Время в секундах
-angle = data(:,2)* pi/180; %угол в радианах
+files = { 
+    'data_10txt.txt', 'data_15txt.txt', 'data_20txt.txt', 'data_25txt.txt', 'data_30txt.txt',...
+    'data_35txt.txt', 'data_40txt.txt', 'data_45txt.txt', 'data_50txt.txt'
+};
 
-out = sim('lab2_3');
-U_rev = [-0.65, -1.01, -1.37, -1.71, -2.08, -2.44, -2.79, -3.15, -3.48, -3.86];
-U_fwd = [0.65, 1.01, 1.37, 1.71, 2.08, 2.44, 2.79, 3.15, 3.49, 3.89];
-U = 10;
+U_fwd = [0.65, 1.01, 1.37, 1.71, 2.08, 2.44, 2.79, 3.15, 3.49];
+U_percent = [10, 15, 20, 25, 30, 35, 40, 45, 50];  % Процентные значения
 
-%simulink_model
-
-theta_sim = out.theta;% Данные theta
-time_sim = theta_sim.time;       % Время
-data_sim = theta_sim.signals.values;        % Данные
-
-% Построение графика
-figure;
-plot(time_file, angle, 'DisplayName', 'Data', 'LineWidth', 2); % Исходные данные
-hold on;
-plot(time_sim, data_sim, 'DisplayName', 'Simulink model', 'LineWidth', 1.5);
-
-% Настройка графика
-set(gca, 'FontSize', 16);
-xlabel('Time, s'); % Время в секундах
-ylabel('Angle (rad)');
-title(['Angle vs Time (U = ', num2str(U), '%)']);
-legend;
-grid on; % Добавление сетки
-
-
-hold off;
+% Цикл по всем файлам
+for i = 1:length(files)
+    % Создаем новую фигуру для каждого файла
+    figure('Name', ['График для U = ', num2str(U_percent(i)), ' %'], ...
+           'NumberTitle', 'off', ...
+           'Position', [100+(i-1)*20, 100+(i-1)*20, 800, 600]);
+    
+    % Загрузка данных из файла
+    data = readmatrix(files{i});
+    time_file = data(:,1) - data(1,1); % Нормализация времени
+    angle = data(:,2) * pi/180; % Перевод угла в радианы
+    
+    % Установка напряжения в Simulink-модели
+    U1 = U_fwd(i); % Берем соответствующее напряжение
+    assignin('base', 'U1', U1); % Передаем в рабочую область
+    
+    % Запуск Simulink-модели
+    out = sim('lab2_3');
+    
+    % Получение данных из Simulink
+    theta_sim = out.theta;
+    time_sim = theta_sim.time;
+    data_sim = theta_sim.signals.values;
+    
+    % Построение графиков
+    plot(time_file, angle, 'b', 'DisplayName', 'Эксперимент', 'LineWidth', 2);
+    hold on;
+    plot(time_sim, data_sim, 'r--', 'DisplayName', 'Модель', 'LineWidth', 1.5);
+    
+    % Настройка графика
+    set(gca, 'FontSize', 12);
+    xlabel('Время, с', 'FontSize', 14);
+    ylabel('Угол, рад', 'FontSize', 14);
+    title(['Сравнение эксперимента и модели для U = ', ...
+           num2str(U_fwd(i)), ' В (', num2str(U_percent(i)), '%)'], ...
+          'FontSize', 16);
+    legend('Location', 'best', 'FontSize', 12);
+    grid on;
+    
+    %Сохранение графика в файл 
+    saveas(gcf, ['plot_', num2str(i), '.png']);
+end
