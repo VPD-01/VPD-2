@@ -9,9 +9,7 @@ U_percent = [10, 15, 20, 25, 30, 35, 40, 45, 50];  % Процентные зна
 % Цикл по всем файлам
 for i = 1:length(files)
     % Создаем новую фигуру для каждого файла
-    figure('Name', ['График для U = ', num2str(U_percent(i)), ' %'], ...
-           'NumberTitle', 'off', ...
-           'Position', [100+(i-1)*20, 100+(i-1)*20, 800, 600]);
+    figure(i);
     
     % Загрузка данных из файла
     data = readmatrix(files{i});
