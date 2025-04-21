@@ -1,0 +1,28 @@
+U_fwd = [0.65, 1.71, 2.44, 3.49];
+% Очистка графика
+figure;
+hold on;
+set(gca, 'FontSize', 16);
+
+% Перебор всех значений напряжения
+for i = 1:length(U_rev)
+    U1 = U_fwd(i);                      % Текущее значение напряжения
+    assignin('base', 'U', U);         % Передаём в базовое пространство (для Simulink)
+    
+    out = sim('lab2_3');              % Запуск модели
+    I_sim = out.I;
+    time_sim = I_sim.time;
+    data_sim = I_sim.signals.values;
+    
+    % Построение графика
+    plot(time_sim, data_sim, 'LineWidth', 1.5, ...
+         'DisplayName', ['U = ', num2str(U1), ' V']);
+end
+
+% Настройка графика
+xlabel('Time (s)');
+ylabel('Current I (A)');
+title('Current vs Time for U forward');
+legend('Location', 'best');
+grid on;
+hold off;
