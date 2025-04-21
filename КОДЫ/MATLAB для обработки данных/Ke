@@ -61,4 +61,4 @@ hold on;
 plot(omega_steady_rads, U_fit, 'r-', 'DisplayName', sprintf('U = %.4f·ω', ke));
 legend;
 
-fprintf('Коэффициент ke = %.4f В·с/рад\n', ke);
+fprintf('Коэффициент ke = %.4f);
