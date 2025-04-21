@@ -1,76 +1,64 @@
-files = {
-'data_-50.txt','data_-45.txt','data_-40.txt','data_-35.txt','data_-30.txt',...
-    'data_-25.txt','data_-20.txt','data_-15.txt','data_-10.txt',...
-    'data_10txt.txt','data_15txt.txt','data_20txt.txt','data_25txt.txt','data_30txt.txt',...
-    'data_35txt.txt','data_40txt.txt','data_45txt.txt','data_50txt.txt'
+files = { 
+    'data_-10.txt', 'data_-15.txt', 'data_-20.txt', 'data_-25.txt', 'data_-30.txt',...
+    'data_-35.txt', 'data_-40.txt', 'data_-45.txt', 'data_-50.txt'
 };
 
-% voltages 
-voltages = [-50, -45, -40, -35, -30, -25, -20, -15, -10, ...
-             10,  15,  20,  25,  30,  35,  40,  45,  50];
+U_rev = [-0.65, -1.01, -1.37, -1.71, -2.08, -2.44, -2.79, -3.15, -3.49];
 
-U_max = 8.7;  % [В]
+omega_steady_rads = zeros(size(files));
+options = optimset('Display', 'off');
 
-% Переводим проценты в абсолютные напряжения [В]
-voltages = voltages / 100 * U_max;
-
-omega_steady_deg = zeros(size(files));
-
-% Определение установившейся скорости (в градусах/с)
 for i = 1:length(files)
     data = load(files{i});
-    time = data(:, 1);
-    omega_deg = data(:, 3);  % Угловая скорость в градусах/с
+    time_unix = data(:, 1);       
+    time = time_unix - time_unix(1); 
+    omega_deg = data(:, 3);       % Скорость в градусах/с 
+    omega_rad = omega_deg * (pi/180); % В радианы/с
     
-    % Усреднение за последние 20% времени
-    steady_idx = round(0.8 * length(time)):length(time);
-    omega_steady_deg(i) = mean(omega_deg(steady_idx));
+    % Проверка постоянства скорости (замена range())
+    if (max(omega_rad) - min(omega_rad)) < 0.01
+        omega_steady_rads(i) = mean(omega_rad);
+        fprintf('Файл %s: скорость постоянна, ω_уст = %.4f рад/с\n', files{i}, omega_steady_rads(i));
+        continue;
+    end
+    
+    
+    par0 = [0.1, 0.06]; 
+    
+    % Аппроксимирующая функция
+    fun_omega = @(par, t) par(1) * (1 - exp(-t/par(2)));
+    
+    
+    par_omega = lsqcurvefit(fun_omega, par0, time, omega_rad, [], [], options);
+    omega_steady_rads(i) = par_omega(1);
+    
+    % Визуализация аппроксимации
+    figure;
+    plot(time, omega_rad, 'b.', 'DisplayName', 'Данные');
+    hold on;
+    plot(time, fun_omega(par_omega, time), 'r-', 'LineWidth', 1.5, 'DisplayName', 'Аппроксимация');
+    xlabel('Время, с');
+    ylabel('\omega, рад/с');
+    title(sprintf('Файл: %s, U = %.2f В', files{i}, U_rev(i)));
+    legend;
+    grid on;
 end
 
-% Перевод скорости в радианы/с
-omega_steady_rad = omega_steady_deg * (pi / 180);  % [рад/с]
-
-% Разделение данных на положительные и отрицательные напряжения
-pos_idx = voltages > 0;
-neg_idx = voltages < 0;
-
-% Линейная аппроксимация U = ke * omega_steady
-% Для положительных напряжений
-p_pos = polyfit(omega_steady_rad(pos_idx), voltages(pos_idx), 1);
-ke_pos = p_pos(1);  % [В/(рад/с)]
-
-% Для отрицательных напряжений
-p_neg = polyfit(omega_steady_rad(neg_idx), voltages(neg_idx), 1);
-ke_neg = p_neg(1);  % [В/(рад/с)]
-
-% Построение графиков
+% Построение U(ω)
 figure;
-
-% График для положительных напряжений
-subplot(2, 1, 1);
-plot(omega_steady_rad(pos_idx), voltages(pos_idx), 'bo', 'DisplayName', 'Экспериментальные точки');
-hold on;
-plot(omega_steady_rad(pos_idx), polyval(p_pos, omega_steady_rad(pos_idx)), 'r-', ...
-    'DisplayName', sprintf('Аппроксимация: U = %.4f * w', ke_pos));
-xlabel('Установившаяся скорость, рад/с');
-ylabel('Напряжение, В');
-title('Зависимость напряжения от скорости (положительные напряжения)');
-legend;
+plot(omega_steady_rads, U_rev, 'bo', 'MarkerFaceColor', 'b', 'DisplayName', 'Данные');
+xlabel('\omega_{уст}, рад/с');
+ylabel('U, В');
+title('Зависимость U от \omega_{уст}');
 grid on;
 
-% График для отрицательных напряжений
-subplot(2, 1, 2);
-plot(omega_steady_rad(neg_idx), voltages(neg_idx), 'bo', 'DisplayName', 'Экспериментальные точки');
-hold on;
-plot(omega_steady_rad(neg_idx), polyval(p_neg, omega_steady_rad(neg_idx)), 'r-', ...
-    'DisplayName', sprintf('Аппроксимация: U = %.4f * w', ke_neg));
-xlabel('Установившаяся скорость, рад/с');
-ylabel('Напряжение, В');
-title('Зависимость напряжения от скорости (отрицательные напряжения)');
-legend;
-grid on;
+% Линейная аппроксимация
+p = polyfit(omega_steady_rads, U_rev, 1);
+ke = p(1);
+U_fit = polyval(p, omega_steady_rads);
 
-% Вывод коэффициентов
-fprintf('Коэффициент ke для положительных напряжений: %.4f В/(рад/с)\n', ke_pos);
-fprintf('Коэффициент ke для отрицательных напряжений: %.4f В/(рад/с)\n', ke_neg);
-fprintf('Коэффициент ke общий: %.4f В/(рад/с)\n', (ke_neg + ke_pos)/2);
+hold on;
+plot(omega_steady_rads, U_fit, 'r-', 'DisplayName', sprintf('U = %.4f·ω', ke));
+legend;
+
+fprintf('Коэффициент ke = %.4f В·с/рад\n', ke);
