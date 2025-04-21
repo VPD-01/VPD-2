@@ -1,0 +1,12 @@
+m_p = 15.7e-3;      % Mass in kg
+r_p = 11.34e-3;     % Radius in meters
+i = 48;             % Gear ratio
+
+% Rotor moment of inertia
+J_rotor = 0.5 * m_p * r_p^2;
+
+% Total (reduced) moment of inertia at output shaft
+J_total = i^2 * J_rotor;
+
+fprintf('Rotor inertia J_rotor = %.6e kg·m²\n', J_rotor);
+fprintf('Reduced inertia J_total = %.6e kg·m²\n', J_total);
