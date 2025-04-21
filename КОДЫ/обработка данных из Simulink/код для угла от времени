@@ -1,0 +1,31 @@
+data = readmatrix('data_20txt.txt');
+time_file = data(:,1) - time_file(1); % Время в секундах
+angle = data(:,2)* pi/180; %угол в радианах
+
+out = sim('lab2_3');
+U_rev = [-0.65, -1.01, -1.37, -1.71, -2.08, -2.44, -2.79, -3.15, -3.48, -3.86];
+U_fwd = [0.65, 1.01, 1.37, 1.71, 2.08, 2.44, 2.79, 3.15, 3.49, 3.89];
+U = 10;
+
+%simulink_model
+
+theta_sim = out.theta;% Данные theta
+time_sim = theta_sim.time;       % Время
+data_sim = theta_sim.signals.values;        % Данные
+
+% Построение графика
+figure;
+plot(time_file, angle, 'DisplayName', 'Data', 'LineWidth', 2); % Исходные данные
+hold on;
+plot(time_sim, data_sim, 'DisplayName', 'Simulink model', 'LineWidth', 1.5);
+
+% Настройка графика
+set(gca, 'FontSize', 16);
+xlabel('Time, s'); % Время в секундах
+ylabel('Angle (rad)');
+title(['Angle vs Time (U = ', num2str(U), '%)']);
+legend;
+grid on; % Добавление сетки
+
+
+hold off;
