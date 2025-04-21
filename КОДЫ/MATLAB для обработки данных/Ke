@@ -1,0 +1,76 @@
+files = {
+'data_-50.txt','data_-45.txt','data_-40.txt','data_-35.txt','data_-30.txt',...
+    'data_-25.txt','data_-20.txt','data_-15.txt','data_-10.txt',...
+    'data_10txt.txt','data_15txt.txt','data_20txt.txt','data_25txt.txt','data_30txt.txt',...
+    'data_35txt.txt','data_40txt.txt','data_45txt.txt','data_50txt.txt'
+};
+
+% voltages 
+voltages = [-50, -45, -40, -35, -30, -25, -20, -15, -10, ...
+             10,  15,  20,  25,  30,  35,  40,  45,  50];
+
+U_max = 8.7;  % [В]
+
+% Переводим проценты в абсолютные напряжения [В]
+voltages = voltages / 100 * U_max;
+
+omega_steady_deg = zeros(size(files));
+
+% Определение установившейся скорости (в градусах/с)
+for i = 1:length(files)
+    data = load(files{i});
+    time = data(:, 1);
+    omega_deg = data(:, 3);  % Угловая скорость в градусах/с
+    
+    % Усреднение за последние 20% времени
+    steady_idx = round(0.8 * length(time)):length(time);
+    omega_steady_deg(i) = mean(omega_deg(steady_idx));
+end
+
+% Перевод скорости в радианы/с
+omega_steady_rad = omega_steady_deg * (pi / 180);  % [рад/с]
+
+% Разделение данных на положительные и отрицательные напряжения
+pos_idx = voltages > 0;
+neg_idx = voltages < 0;
+
+% Линейная аппроксимация U = ke * omega_steady
+% Для положительных напряжений
+p_pos = polyfit(omega_steady_rad(pos_idx), voltages(pos_idx), 1);
+ke_pos = p_pos(1);  % [В/(рад/с)]
+
+% Для отрицательных напряжений
+p_neg = polyfit(omega_steady_rad(neg_idx), voltages(neg_idx), 1);
+ke_neg = p_neg(1);  % [В/(рад/с)]
+
+% Построение графиков
+figure;
+
+% График для положительных напряжений
+subplot(2, 1, 1);
+plot(omega_steady_rad(pos_idx), voltages(pos_idx), 'bo', 'DisplayName', 'Экспериментальные точки');
+hold on;
+plot(omega_steady_rad(pos_idx), polyval(p_pos, omega_steady_rad(pos_idx)), 'r-', ...
+    'DisplayName', sprintf('Аппроксимация: U = %.4f * w', ke_pos));
+xlabel('Установившаяся скорость, рад/с');
+ylabel('Напряжение, В');
+title('Зависимость напряжения от скорости (положительные напряжения)');
+legend;
+grid on;
+
+% График для отрицательных напряжений
+subplot(2, 1, 2);
+plot(omega_steady_rad(neg_idx), voltages(neg_idx), 'bo', 'DisplayName', 'Экспериментальные точки');
+hold on;
+plot(omega_steady_rad(neg_idx), polyval(p_neg, omega_steady_rad(neg_idx)), 'r-', ...
+    'DisplayName', sprintf('Аппроксимация: U = %.4f * w', ke_neg));
+xlabel('Установившаяся скорость, рад/с');
+ylabel('Напряжение, В');
+title('Зависимость напряжения от скорости (отрицательные напряжения)');
+legend;
+grid on;
+
+% Вывод коэффициентов
+fprintf('Коэффициент ke для положительных напряжений: %.4f В/(рад/с)\n', ke_pos);
+fprintf('Коэффициент ke для отрицательных напряжений: %.4f В/(рад/с)\n', ke_neg);
+fprintf('Коэффициент ke общий: %.4f В/(рад/с)\n', (ke_neg + ke_pos)/2);
