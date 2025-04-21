@@ -1,34 +1,42 @@
-clear all;
 U_fwd = [0.65, 1.01, 1.37, 1.71, 2.08, 2.44, 2.79, 3.15, 3.49, 3.89]; 
 I_fwd = [0.5, 0.77, 1.01, 1.23, 1.39, 1.57, 1.82, 2.05, 2.32, 2.57]; 
 
 U_rev = [-0.65, -1.01, -1.37, -1.71, -2.08, -2.44, -2.79, -3.15, -3.48, -3.86]; 
 I_rev = [-0.49, -0.76, -1.02, -1.23, -1.39, -1.57, -1.83, -2.06, -2.31, -2.56];
 
-% Calculate resistance using least squares
+% Вычисление сопротивления методом наименьших квадратов
 R_fwd = sum(U_fwd .* I_fwd) / sum(I_fwd .^ 2);
 R_rev = sum(U_rev .* I_rev) / sum(I_rev .^ 2);
 
 R_avg = (R_fwd + R_rev) / 2;
 
-% Display results
+% Вывод результатов
 fprintf('R (forward): %.4f Ohm\n', R_fwd);
 fprintf('R (reverse): %.4f Ohm\n', R_rev);
 fprintf('R (average): %.4f Ohm\n', R_avg);
 
-% Plotting
-figure;
+%% График для прямого направления
+figure(1); % Создаем новое окно для первого графика
+I_plot_fwd = linspace(0, max(I_fwd), 100);
+plot(I_plot_fwd, R_fwd * I_plot_fwd, 'b', 'LineWidth', 2, 'DisplayName', sprintf('Fit Fwd (R=%.2f Ohm)', R_fwd));
 hold on;
 scatter(I_fwd, U_fwd, 'bo', 'DisplayName', 'Forward Data');
-scatter(I_rev, U_rev, 'ro', 'DisplayName', 'Reverse Data');
-
-% Fitted lines
-I_plot = linspace(0, max([I_fwd, I_rev]), 100);
-plot(I_plot, R_fwd * I_plot, 'b--', 'DisplayName', sprintf('Fit Fwd (R=%.2f)', R_fwd));
-plot(I_plot, R_rev * I_plot, 'r--', 'DisplayName', sprintf('Fit Rev (R=%.2f)', R_rev));
-
 xlabel('Current (A)');
 ylabel('Voltage (V)');
-title('U-I Characteristics and Linear Fits');
+title('Forward U-I Characteristics and Linear Fit');
 legend('Location', 'northwest');
 grid on;
+hold off;
+
+%% График для обратного направления
+figure(2); % Создаем новое окно для второго графика
+I_plot_rev = linspace(min(I_rev), 0, 100);
+plot(I_plot_rev, R_rev * I_plot_rev, 'r', 'LineWidth', 2, 'DisplayName', sprintf('Fit Rev (R=%.2f Ohm)', R_rev));
+hold on;
+scatter(I_rev, U_rev, 'ro', 'DisplayName', 'Reverse Data');
+xlabel('Current (A)');
+ylabel('Voltage (V)');
+title('Reverse U-I Characteristics and Linear Fit');
+legend('Location', 'northwest');
+grid on;
+hold off;
