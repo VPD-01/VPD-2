@@ -3,7 +3,7 @@ import time
 
 motor = LargeMotor(OUTPUT_B)
 
-for volt in range(10, 56, 5):
+for volt in range(10, 51, 5):
     volt = -volt
     start_time = time.time()
     startPos = motor.position
@@ -14,7 +14,7 @@ for volt in range(10, 56, 5):
         motor.run_direct(duty_cycle_sp=volt)
         pos = motor.position - startPos
         vel = motor.speed
-        file.write(str(time.time()) + ", " + str(pos) + ", " + str(vel) + "\n")
+        file.write(str(delta_t) + ", " + str(pos) + ", " + str(vel) + "\n")
     else:
 
         motor.stop()
