@@ -6,8 +6,7 @@ files = {
     'data_10txt.txt', 'data_15txt.txt', 'data_20txt.txt', 'data_25txt.txt', ...
     'data_30txt.txt', 'data_35txt.txt', 'data_40txt.txt', 'data_45txt.txt', 'data_50txt.txt'
 };
-%voltages = [0.65, 1.01, 1.37, 1.71, 2.08, 2.44, 2.79, 3.15, 3.49];
-voltages = [10, 15, 20, 25, 30, 35, 40, 45, 50];
+voltages = [0.65, 1.01, 1.37, 1.71, 2.08, 2.44, 2.79, 3.15, 3.49];
 speed = zeros(1, length(files)); % Инициализация массива скоростей
 
 % Чтение данных из файлов и расчет установившейся скорости
