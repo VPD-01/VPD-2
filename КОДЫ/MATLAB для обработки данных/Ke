@@ -17,7 +17,7 @@ for i = 1:length(files)
     angle = data(:,2) * pi / 180;
     omega = data(:,3) * pi / 180;
     
-    speed(i) = omega(end); % Сохраняем конечную скорость
+    speed(i) = omega(end); % Сохраняем установившуюся скорость
 end
 
 % Построение точечного графика
@@ -26,19 +26,18 @@ xlabel('Voltage (V)');
 ylabel('Speed (rad/s)');
 hold on;
 
-% Аппроксимация методом наименьших квадратов
-p = polyfit(voltages, speed, 1); % Коэффициенты полинома первой степени (y = p(1)*x + p(2))
+% Аппроксимация прямой U = ke * omega + b
+p = polyfit(voltages, speed, 1); 
 k = p(1); % Угловой коэффициент
 b = p(2); % Свободный член
 
+% Построение аппроксимированной прямой
 voltages_fit = linspace(min(voltages), max(voltages), 100);
 speed_fit = polyval(p, voltages_fit);
-
-% Построение аппроксимированной прямой
 plot(voltages_fit, speed_fit, 'r-', 'LineWidth', 1);
 
 % Вывод углового коэффициента в командное окно
-fprintf('Угловой коэффициент аппроксимации (k) = %.4f рад/(с·В)\n', k);
+fprintf('Угловой коэффициент аппроксимации (k) = %.4f (В*с)/рад\n', k);
 
 % Добавление легенды и заголовка
 title("Зависимость скорости от напряжения");
